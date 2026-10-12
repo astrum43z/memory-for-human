@@ -64,3 +64,30 @@ dialog.chapter-focus{inset:0;margin:0;width:100%;max-width:none;height:100dvh;ma
 @keyframes source-reveal{from{opacity:.4}to{opacity:1}}
 @media(max-width:700px){.source-search-row{align-items:stretch;flex-wrap:wrap}.source-search-row input{flex-basis:100%}.source-search-row button{margin-left:auto;min-height:44px}.source-search-label{font-size:20px}.source-record>summary{padding-top:18px;padding-bottom:18px}.source-title{font-size:16px}}
 @media(prefers-reduced-motion:reduce){.source-arrow{transition:none}.source-record[open]>.source-body{animation:none}}
+
+/* A manuscript contents page, not a gate in front of backup or export. */
+.manuscript-overview{border-block:1px solid var(--line);padding:25px 0;margin-bottom:12px}
+.manuscript-eyebrow{font-size:13px;font-weight:500;letter-spacing:.06em;color:var(--muted)}
+.manuscript-title{font-family:Georgia,"Noto Serif CJK SC","Songti SC",SimSun,serif;font-size:clamp(25px,2.8vw,34px);font-weight:600;line-height:1.45;overflow-wrap:anywhere;margin:12px 0 16px}
+.manuscript-counts{font-size:15px;font-variant-numeric:tabular-nums;line-height:1.8;color:var(--ink)}
+.manuscript-note{font-size:14px;line-height:1.8;color:var(--muted);transition:color 160ms ease-out}
+.manuscript-overview[data-state="reviewed"] .manuscript-note{color:var(--green)}
+.manuscript-check{font-size:14px;margin:4px 0 10px;border-color:#9bad9f;background:var(--soft);color:var(--green)}
+.manuscript-directory{margin-top:14px;border-top:1px solid var(--line)}
+.manuscript-directory>summary{display:flex;justify-content:space-between;align-items:center;gap:16px;list-style:none;cursor:pointer;padding:16px 0;font-size:15px;font-weight:600;line-height:1.5}
+.manuscript-directory>summary::-webkit-details-marker{display:none}
+.manuscript-chevron{font-size:25px;color:var(--green);transition:transform 140ms ease-out}
+.manuscript-directory[open]>summary .manuscript-chevron{transform:rotate(90deg)}
+.manuscript-chapters{list-style:none;margin:0;padding:0 8px 0 0;max-height:24rem;overflow:auto;overscroll-behavior:contain}
+.manuscript-chapter{display:flex;align-items:center;gap:16px;padding:16px 0;border-top:1px solid var(--line)}
+.manuscript-number{font-family:Georgia,serif;font-size:19px;color:var(--muted);align-self:flex-start;font-variant-numeric:tabular-nums;flex-shrink:0}
+.manuscript-chapter-text{min-width:0;flex:1}
+.manuscript-chapter-title{display:block;font-size:16px;font-weight:600;overflow-wrap:anywhere;line-height:1.6}
+.manuscript-chapter-state{display:block;font-size:12px;color:var(--muted);margin-top:4px;line-height:1.6}
+.manuscript-chapter[data-reviewed="true"] .manuscript-chapter-state{color:var(--green)}
+.manuscript-chapter button{flex-shrink:0;max-width:35%;min-height:44px;color:var(--green);text-decoration:underline;text-underline-offset:4px}
+.manuscript-scope{font-size:13px;color:var(--muted);line-height:1.75;margin:20px 0 0}
+.manuscript-return{margin-bottom:16px;color:var(--green);min-height:44px}
+.manuscript-directory>summary:focus-visible,.manuscript-chapters:focus-visible,#exportOverview:focus-visible,#chapterEditor:focus-visible{outline:3px solid #86ab94;outline-offset:4px}
+@media(max-width:700px){.manuscript-overview{padding:22px 0}.manuscript-chapter{gap:10px}.manuscript-chapter button{font-size:12px;padding:8px}.manuscript-number{font-size:17px}.manuscript-chapter-title{font-size:15px}.manuscript-counts{font-size:14px}.manuscript-chapters{padding-right:4px}}
+@media(prefers-reduced-motion:reduce){.manuscript-note,.manuscript-chevron{transition:none}}
