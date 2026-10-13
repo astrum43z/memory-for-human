@@ -51,6 +51,9 @@ Object.assign(window.MFH_LOCALES.es, {retrySave:'Reintentar guardar',saveRecover
 Object.assign(window.MFH_LOCALES.zh, {firstChapterReady:'已有文字可以整理了。先把它们汇成一章，不用连接 AI。'});
 Object.assign(window.MFH_LOCALES.en, {firstChapterReady:'Your words are ready. Gather them into your first editable chapter without connecting AI.'});
 Object.assign(window.MFH_LOCALES.es, {firstChapterReady:'Ya tienes textos para reunir en un primer capítulo editable, sin conectar la IA.'});
+Object.assign(window.MFH_LOCALES.zh, {organizeChapter:'把已有材料整理成新一章',otherMethods:'其他整理方式'});
+Object.assign(window.MFH_LOCALES.en, {organizeChapter:'Organize material into a new chapter',otherMethods:'Other ways to organize'});
+Object.assign(window.MFH_LOCALES.es, {organizeChapter:'Reunir materiales en un nuevo capítulo',otherMethods:'Otras formas de organizar'});
 window.MFH_QUESTIONS = {
   "zh": {
     "lovers": [
