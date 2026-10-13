@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="app/edition.css?v=6af448c2727c">
   <link rel="stylesheet" href="app/chapter-finder.css?v=1dbc4d521735">
   <script src="app/core.js?v=1abf0f132bf9" defer></script>
-  <script src="app/i18n.js?v=0e5cefacbdbb" defer></script>
+  <script src="app/i18n.js?v=ae4b83f0dc21" defer></script>
   <script src="app/app.js?v=da6d2580b218" defer></script>
 </head>
 <body class="private-edition">
@@ -67,7 +67,7 @@
           <div class="question-box"><small data-i18n="question"></small><p id="questionText"></p></div>
           <div class="field"><label for="answer" data-i18n="answerLabel"></label><textarea id="answer" class="answer-text" data-placeholder="answerPlaceholder"></textarea></div>
           <div class="row spaced interview-actions"><button class="primary" data-action="saveAnswer" data-i18n="saveAnswer"></button><button data-action="skip" data-i18n="skip"></button></div>
-          <details id="interviewTools" class="interview-tools"><summary data-i18n="interviewTools"></summary><div class="row"><button data-action="askAI" data-ai data-i18n="askAI"></button><button class="quiet" id="voiceButton" data-action="voice" data-i18n="voice"></button></div><p class="hint" data-i18n="voiceNote"></p></details>
+          <details id="interviewTools" class="interview-tools"><summary data-i18n="interviewTools"></summary><p id="interviewSendNotice" class="hint" data-i18n="interviewSendNotice"></p><div class="row"><button data-action="askAI" data-ai data-i18n="askAI" aria-describedby="interviewSendNotice"></button><button class="quiet" id="voiceButton" data-action="voice" data-i18n="voice"></button></div><p class="hint" data-i18n="voiceNote"></p></details>
           <div class="interview-next"><span data-i18n="interviewNextHint"></span><button class="quiet" data-action="goWriting" data-i18n="goWriting"></button></div>
           </div><div id="archiveView" hidden><div class="section-head"><p class="eyebrow" data-i18n="archiveTab"></p><h2 data-i18n="archiveTitle"></h2><p class="hint" data-i18n="archiveHint"></p></div>
           <div class="subsection" id="sourceLibrary">
@@ -99,9 +99,9 @@
             <div class="composer-content">
               <div class="field"><label for="nextChapterTitle" data-i18n="chapterTitle"></label><input id="nextChapterTitle" maxlength="300" data-placeholder="chapterPlaceholder"></div>
               <div id="organizerPrimary" class="row spaced"></div>
-              <details class="other-methods"><summary data-i18n="otherMethods"></summary><div id="organizerAlternatives" class="row spaced"><button id="writingAIButton" class="primary" data-action="writeAI" data-ai data-i18n="writeAI"></button><button id="writingLocalButton" data-action="collect" data-i18n="collect"></button><button data-action="pasteDraft" data-i18n="pasteDraft"></button></div></details>
+              <details class="other-methods"><summary data-i18n="otherMethods"></summary><div id="organizerAlternatives" class="row spaced"><button id="writingAIButton" class="primary" aria-describedby="chapterSendNotice" data-action="writeAI" data-ai data-i18n="writeAI"></button><button id="writingLocalButton" data-action="collect" data-i18n="collect"></button><button data-action="pasteDraft" data-i18n="pasteDraft"></button></div></details>
 
-          <p class="notice" data-i18n="sendNotice"></p>
+          <p id="chapterSendNotice" class="notice" data-i18n="sendNotice"></p>
             </div>
           </details>
         </section>

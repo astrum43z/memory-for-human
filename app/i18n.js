@@ -654,3 +654,7 @@ Object.assign(window.MFH_LOCALES.es,{skipToWork:'Ir al manuscrito',editionLabel:
 Object.assign(window.MFH_LOCALES.zh,{coverTitlePlaceholder:'一本关于你的书',interviewTools:'语音与 AI 追问'});
 Object.assign(window.MFH_LOCALES.en,{coverTitlePlaceholder:'A book about you',interviewTools:'Dictation and AI questions'});
 Object.assign(window.MFH_LOCALES.es,{coverTitlePlaceholder:'Un libro sobre ti',interviewTools:'Dictado y preguntas de IA'});
+
+Object.assign(window.MFH_LOCALES.zh,{interviewSendNotice:'AI 追问会发送本书基本信息及勾选的回答、材料，不发送未勾选的素材或章节正文。'});
+Object.assign(window.MFH_LOCALES.en,{interviewSendNotice:'AI questions send this book’s basic information and selected answers and materials. Unselected sources and chapter text are not sent.'});
+Object.assign(window.MFH_LOCALES.es,{interviewSendNotice:'Las preguntas de IA envían los datos básicos del libro y las respuestas y materiales seleccionados. No se envían las fuentes sin seleccionar ni el texto de los capítulos.'});
