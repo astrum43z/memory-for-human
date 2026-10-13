@@ -12,16 +12,16 @@
   function remember(key, value) { try { localStorage.setItem(key, value); } catch (_) {} }
   const getAll = () => new Promise((resolve, reject) => { const r = db.transaction('projects').objectStore('projects').getAll(); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
   function saveStatus(message) { $('saveStatus').textContent = message; $('focusSaveStatus').textContent = message; }
-  async function save() {
-    project.updatedAt = new Date().toISOString();
+  async function save(target = project) {
+    target.updatedAt = new Date().toISOString();
     saveStatus(t('saving'));
-    if (!db) { saveStatus(t('saveFailed')); return; }
-    const snapshot = structuredClone(project);
+    if (!db) { saveStatus(t('saveFailed')); return false; }
+    const snapshot = structuredClone(target);
     try {
       await new Promise((resolve, reject) => { const tx = db.transaction('projects', 'readwrite'); tx.objectStore('projects').put(snapshot); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error); });
       const i = projects.findIndex(p => p.id === snapshot.id); if (i >= 0) projects[i] = snapshot; else projects.push(snapshot);
-      renderProjects(); saveStatus(t('saved'));
-    } catch (_) { saveStatus(t('saveFailed')); toast(t('saveFailed')); }
+      renderProjects(); saveStatus(t('saved')); return true;
+    } catch (_) { saveStatus(t('saveFailed')); toast(t('saveFailed')); return false; }
   }
   function translate() {
     document.documentElement.lang = {zh:'zh-CN',en:'en',es:'es'}[lang]; $('language').value = lang;
@@ -228,6 +228,66 @@
   }
   $('chapterQuery').addEventListener('input', renderChapterFinder);
   $('clearChapterQuery').addEventListener('click', () => { $('chapterQuery').value = ''; renderChapterFinder(); $('chapterQuery').focus(); });
+  let interviewEpoch = 0, pendingInterviewChange = null, interviewSaving = false;
+  function stopInterviewVoice() {
+    if (!recognition) return;
+    const previous = recognition; recognition = null; previous.abort(); $('voiceButton').textContent = t('voice');
+  }
+  function changedInterview(change, includeAnswer) {
+    const next = structuredClone(project);
+    if (includeAnswer) {
+      next.answers.push({id:C.uuid(),sourceId:'A'+next.nextAnswer++,include:true,question:currentQuestion(),answer:$('answer').value.trim(),date:new Date().toISOString()});
+      next.workingAnswer = ''; next.questionIndex++; next.aiQuestion = '';
+    } else if (change.kind === 'skip') { next.questionIndex++; next.aiQuestion = ''; }
+    if (change.kind === 'scene') { next.scene = change.value; next.questionIndex = 0; next.aiQuestion = ''; }
+    if (change.kind === 'language') next.language = change.value;
+    return next;
+  }
+  async function askInterviewQuestion() {
+    const epoch = interviewEpoch, id = project.id, version = connectionVersion;
+    const result = await requestAI('interview');
+    if (!result || epoch !== interviewEpoch || id !== project.id || version !== connectionVersion || $('answer').value.trim() || step !== 1 || mode !== 'workspace') return;
+    project.aiQuestion = result.slice(0,2000); interviewEpoch++; renderQuestion(); await save();
+  }
+  function applyInterviewChange(next, change) {
+    project = next;
+    if (change.kind === 'language') { lang = change.value; remember('mfh-language', lang); }
+    interviewEpoch++;
+    const oldMode = mode; render(); showMode(oldMode);
+    if (step === 1 && mode === 'workspace') $('answer').focus({preventScroll:true});
+    else if (change.kind === 'scene') $('scenes').querySelector('input:checked')?.focus({preventScroll:true});
+    else if (change.kind === 'language') $('language').focus({preventScroll:true});
+  }
+  async function commitInterviewChange() {
+    if (!pendingInterviewChange || interviewSaving) return;
+    const change = pendingInterviewChange, next = changedInterview(change, true);
+    interviewSaving = true; $('keepInterviewDraft').disabled = true; $('saveInterviewDraft').disabled = true;
+    $('interviewDraftStatus').textContent = t('saving');
+    const saved = await save(next);
+    interviewSaving = false; $('keepInterviewDraft').disabled = false; $('saveInterviewDraft').disabled = false;
+    if (!saved) { $('interviewDraftStatus').textContent = t('draftSaveFailed'); $('saveInterviewDraft').focus(); return; }
+    pendingInterviewChange = null; $('interviewDraftDialog').close(); applyInterviewChange(next, change); sourceNotice(sourceFeedback(next.answers.at(-1),t('answerSaved')));
+    if (change.kind === 'ai') await askInterviewQuestion();
+  }
+  async function changeInterview(change) {
+    if (interviewSaving || $('interviewDraftDialog').open) return;
+    if (change.kind === 'ai' && (!connection || busy)) { toast(t(connection ? 'busy' : 'needConnect')); return; }
+    interviewEpoch++; stopInterviewVoice();
+    const hasAnswer = !!$('answer').value.trim();
+    if (change.kind === 'save' && !hasAnswer) { toast(t('emptyAnswer')); return; }
+    if (hasAnswer) {
+      pendingInterviewChange = change; $('interviewDraftQuestion').textContent = currentQuestion(); $('interviewDraftStatus').textContent = '';
+      $('interviewDraftDialog').showModal(); $('keepInterviewDraft').focus();
+      if (change.kind === 'save') await commitInterviewChange();
+      return;
+    }
+    applyInterviewChange(changedInterview(change, false), change); void save();
+    if (change.kind === 'ai') await askInterviewQuestion();
+  }
+  $('interviewDraftDialog').addEventListener('cancel', e => { if (interviewSaving) e.preventDefault(); else pendingInterviewChange = null; });
+  // Clear cancellation synchronously: a queued close event may arrive after reopening.
+  $('keepInterviewDraft').addEventListener('click', () => { if (!interviewSaving) pendingInterviewChange = null; });
+  $('saveInterviewDraft').addEventListener('click', commitInterviewChange);
   function renderConnection() {
     $('connectionStatus').textContent = connection ? `${t('connected')} · ${C.providers[connection.provider]?.name || ''}` : t('offline'); $('connectionDot').classList.toggle('on', !!connection); $('connectionButton').textContent = t('connect');
   }
@@ -247,10 +307,12 @@
   }
   function renderHandoff() { try { $('handoffText').value = handoffText(); } catch (e) { toast(errorText(e.message)); } }
   function showMode(value) {
+    if (mode !== value) interviewEpoch++;
     mode = value; $('workspacePanel').hidden = mode !== 'workspace'; $('helpPanel').hidden = mode !== 'help'; $('handoffPanel').hidden = mode !== 'handoff';
     if (mode === 'help') renderHelp(); if (mode === 'handoff') renderHandoff();
   }
   function showStep(value, scroll = true) {
+    interviewEpoch++;
     step = Math.max(0, Math.min(3, value)); showMode('workspace');
     if (step !== 2) exportReviewProject = '';
     $('returnToExport').hidden = step !== 2 || exportReviewProject !== project.id;
@@ -316,14 +378,14 @@
     next: () => showStep(step + 1), back: () => showStep(step - 1),
     new: async () => { if(busy)return; await save(); project=C.newProject(lang); remember('mfh-active',project.id); step=0; await save(); render(); },
     demo: async () => { if(busy)return; project=C.newProject(lang); project.title=t('demoName'); project.scene='life'; project.materials.push({id:C.uuid(),sourceId:'M'+project.nextMaterial++,name:t('demoNotice'),content:t('demoNotice'),include:true}); project.answers.push({id:C.uuid(),sourceId:'A'+project.nextAnswer++,include:true,question:t('demoQuestion'),answer:t('demoAnswer'),date:new Date().toISOString()}); remember('mfh-active',project.id); await save(); step=1; render(); toast(t('demoNotice')); },
-    saveAnswer: async () => { const answer=$('answer').value.trim(); if(!answer){toast(t('emptyAnswer'));return;} const record={id:C.uuid(),sourceId:'A'+project.nextAnswer++,include:true,question:currentQuestion(),answer,date:new Date().toISOString()};project.answers.push(record); project.workingAnswer=''; project.questionIndex++; project.aiQuestion=''; $('answer').value=''; await save(); renderAnswers(); renderQuestion(); sourceNotice(sourceFeedback(record,t('answerSaved'))); },
-    skip: async () => { project.questionIndex++; project.aiQuestion=''; await save(); renderQuestion(); },
-    askAI: async () => { const result=await requestAI('interview'); if(result){project.aiQuestion=result.slice(0,2000); await save(); renderQuestion();} },
+    saveAnswer: () => changeInterview({kind:'save'}),
+    skip: () => changeInterview({kind:'skip'}),
+    askAI: () => changeInterview({kind:'ai'}),
     voice: () => {
       if(recognition){recognition.stop();return;} const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
       if(!Recognition){toast(t('voiceUnavailable'));return;} const r=new Recognition(); recognition=r; r.lang={zh:'zh-CN',en:'en-US',es:'es-ES'}[lang]; r.interimResults=false; r.continuous=false;
-      r.onresult=async e=>{ $('answer').value += ($('answer').value?'\n':'')+Array.from(e.results).map(x=>x[0].transcript).join(' '); project.workingAnswer=$('answer').value; await save(); };
-      r.onerror=()=>toast(t('voiceFailed')); r.onend=()=>{recognition=null;$('voiceButton').textContent=t('voice');};
+      r.onresult=async e=>{ if(recognition!==r)return;interviewEpoch++;$('answer').value += ($('answer').value?'\n':'')+Array.from(e.results).map(x=>x[0].transcript).join(' '); project.workingAnswer=$('answer').value; await save(); };
+      r.onerror=()=>{if(recognition===r)toast(t('voiceFailed'));}; r.onend=()=>{if(recognition!==r)return;recognition=null;$('voiceButton').textContent=t('voice');};
       try{r.start();$('voiceButton').textContent=t('stopVoice');}catch(_){recognition=null;toast(t('voiceFailed'));}
     },
     editAnswer: (id) => { const a=project.answers.find(a=>a.id===id); if(!a)return; editingAnswer=id;$('editQuestion').value=a.question;$('editAnswer').value=a.answer;$('editAnswerDialog').showModal(); },
@@ -354,10 +416,10 @@
     const button=e.target.closest('[data-action]');if(!button||!project)return;
     try{await actions[button.dataset.action]?.(button.dataset.id);}catch(err){toast(errorText(err.message));}
   });
-  $('language').addEventListener('change',async()=>{lang=$('language').value;project.language=lang;remember('mfh-language',lang);await save();const oldMode=mode;render();showMode(oldMode);});
+  $('language').addEventListener('change',()=>{const value=$('language').value;$('language').value=lang;void changeInterview({kind:'language',value});});
   $('projects').addEventListener('change',async()=>{const selectedId=$('projects').value;if(busy){$('projects').value=project.id;return;}await save();const selected=projects.find(p=>p.id===selectedId);if(!selected)return;project=structuredClone(selected);remember('mfh-active',project.id);step=0;$('reviewPanel').hidden=true;render();});
-  $('scenes').addEventListener('change',async e=>{project.scene=e.target.value;project.questionIndex=0;project.aiQuestion='';await save();renderQuestion();});
-  for(const [id,key] of [['bookTitle','title'],['person','person'],['reader','reader'],['target','target'],['answer','workingAnswer']]) $(id).addEventListener(id==='target'?'change':'input',()=>{project[key]=$(id).value;void save();});
+  $('scenes').addEventListener('change',e=>{const value=e.target.value;renderScenes();$('scenes').querySelector('input:checked')?.focus({preventScroll:true});void changeInterview({kind:'scene',value});});
+  for(const [id,key] of [['bookTitle','title'],['person','person'],['reader','reader'],['target','target'],['answer','workingAnswer']]) $(id).addEventListener(id==='target'?'change':'input',()=>{if(id==='answer')interviewEpoch++;project[key]=$(id).value;void save();});
   $('materials').addEventListener('change',async e=>{const m=project.materials.find(m=>m.id===e.target.dataset.material);if(m){m.include=e.target.checked;updateSourceInclusion(e.target);await save();}});
   $('answers').addEventListener('change',async e=>{const a=project.answers.find(a=>a.id===e.target.dataset.answerSource);if(a){a.include=e.target.checked;updateSourceInclusion(e.target);await save();}});
   for(const [id,key] of [['editChapterTitle','title'],['chapterText','content']])$(id).addEventListener('input',()=>{const c=activeChapter();if(!c)return;c[key]=$(id).value;c.approved=false;c.updatedAt=new Date().toISOString();updateChapterBadge();void save();});

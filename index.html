@@ -166,6 +166,13 @@
     <ol id="chapterMatchesList" class="finder-list"></ol>
     <p id="noChapterMatches" class="empty" data-i18n="noChapterMatches" hidden></p>
   </dialog>
+  <dialog id="interviewDraftDialog" aria-labelledby="interviewDraftTitle" aria-describedby="interviewDraftHint">
+    <h2 id="interviewDraftTitle" data-i18n="draftBeforeQuestion"></h2>
+    <p id="interviewDraftHint" data-i18n="draftBeforeQuestionHint"></p>
+    <blockquote id="interviewDraftQuestion" class="draft-question"></blockquote>
+    <p id="interviewDraftStatus" class="hint" role="status" aria-live="polite"></p>
+    <div class="row spaced"><button id="keepInterviewDraft" data-close="interviewDraftDialog" data-i18n="keepInterviewDraft"></button><button id="saveInterviewDraft" class="primary" data-i18n="saveInterviewDraft"></button></div>
+  </dialog>
   <input type="file" id="textFile" accept=".txt,.md,.csv,.json" multiple hidden>
   <input type="file" id="backupFile" accept=".json" hidden>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
