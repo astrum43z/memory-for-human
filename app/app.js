@@ -554,13 +554,35 @@
     connect: () => { $('fileMode').hidden=!!token;$('connectionError').hidden=true;$('connectionDialog').showModal(); },
     disconnect: async () => { connectionVersion++;if(token)await api('/api/disconnect',{});connection=null;$('apiKey').value='';renderConnection();toast(t('disconnected')); }
   };
+  function restoreNavigationFocus(source) {
+    const active = document.activeElement;
+    const visible = element => {
+      if (!element?.getClientRects().length) return false;
+      for (let parent=element.parentElement;parent;parent=parent.parentElement) {
+        if (parent.tagName==='DETAILS' && !parent.open && !parent.querySelector('summary')?.contains(element)) return false;
+      }
+      return true;
+    };
+    // Preserve explicit focus (including dialogs), and only repair a control
+    // hidden by navigation or a disclosure closing after its action completes.
+    if (visible(source) || (active !== document.body && visible(active))) return;
+    const target = mode === 'help' ? $('helpPanel').querySelector('h1')
+      : mode === 'handoff' ? $('handoffPanel').querySelector('h1')
+      : step === 0 ? $('deskHeading')
+      : step === 1 ? ($('interviewView').hidden ? $('archiveView').querySelector('h2') : $('answer'))
+      : step === 2 ? ($('chapterEditor').hidden ? $('writingBookTitle') : $('editChapterTitle'))
+      : $('exportOverview');
+    if (!target?.getClientRects().length) return;
+    if (!target.matches('input,textarea,select,button,[tabindex]')) target.tabIndex = -1;
+    target.focus({preventScroll:true}); target.scrollIntoView({block:'center',behavior:'auto'});
+  }
   document.addEventListener('click', async e => {
     const close=e.target.closest('[data-close]');if(close){$(close.dataset.close).close();return;}
     const nextStep=e.target.closest('[data-step]');if(nextStep){showStep(Number(nextStep.dataset.step));return;}
     const faqButton=e.target.closest('[data-faq]');if(faqButton){faq=Number(faqButton.dataset.faq);renderHelp();return;}
     const button=e.target.closest('[data-action]');if(!button||!project)return;
     $('workspaceTools').open=false;
-    try{await actions[button.dataset.action]?.(button.dataset.id);}catch(err){toast(errorText(err.message));}
+    try{await actions[button.dataset.action]?.(button.dataset.id);restoreNavigationFocus(button);}catch(err){toast(errorText(err.message));}
   });
   $('workspaceTools').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();$('workspaceTools').open=false;$('workspaceTools').querySelector('summary').focus();}});
   $('language').addEventListener('change',()=>{const value=$('language').value;$('language').value=lang;void changeInterview({kind:'language',value});});
