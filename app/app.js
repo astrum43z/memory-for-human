@@ -397,7 +397,7 @@
   async function addChapter(content, origin = 'manual', title = '') {
     if (!content.trim()) { toast(t('invalidResult')); return; }
     const c = {id:C.uuid(), title:title || $('nextChapterTitle').value.trim() || `${t('chapter')} ${project.chapters.length + 1}`, content, origin, approved:false, updatedAt:new Date().toISOString()};
-    project.chapters.push(c); project.activeChapter = c.id; $('nextChapterTitle').value = ''; $('reviewPanel').hidden = true; await save(); renderChapters(); showStep(2); toast(t('chapterAdded'));
+    project.chapters.push(c); project.activeChapter = c.id; $('nextChapterTitle').value = ''; $('reviewPanel').hidden = true; const saved = await save(); renderChapters(); showStep(2); if (saved) toast(t('chapterAdded'));
   }
   async function importAIResult() {
     let content = $('returnedAI').value.trim(), title = '', question = '';
