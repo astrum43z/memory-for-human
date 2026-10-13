@@ -92,3 +92,4 @@ dialog.chapter-focus{inset:0;margin:0;width:100%;max-width:none;height:100dvh;ma
 @media(max-width:700px){.manuscript-overview{padding:22px 0}.manuscript-chapter{gap:10px}.manuscript-chapter button{font-size:12px;padding:8px}.manuscript-number{font-size:17px}.manuscript-chapter-title{font-size:15px}.manuscript-counts{font-size:14px}.manuscript-chapters{padding-right:4px}}
 @media(prefers-reduced-motion:reduce){.manuscript-note,.manuscript-chevron{transition:none}}
 .draft-question{margin:20px 0;padding:16px 20px;border-left:3px solid var(--green);background:var(--soft);font-size:17px;line-height:1.8;overflow-wrap:anywhere}
+.save-recovery{padding:16px;margin-bottom:20px;border:1px solid #b98239;border-radius:12px;background:#fff7e8;overflow-wrap:anywhere}.save-recovery p{margin:0 0 12px}.save-recovery .row{flex-wrap:wrap}.save-recovery button{max-width:100%;white-space:normal}

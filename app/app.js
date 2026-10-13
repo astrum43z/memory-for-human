@@ -12,16 +12,54 @@
   function remember(key, value) { try { localStorage.setItem(key, value); } catch (_) {} }
   const getAll = () => new Promise((resolve, reject) => { const r = db.transaction('projects').objectStore('projects').getAll(); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
   function saveStatus(message) { $('saveStatus').textContent = message; $('focusSaveStatus').textContent = message; }
+  const saveRecords = new Map();
+  let changingProject = false;
+  function saveRecord(id) {
+    if (!saveRecords.has(id)) saveRecords.set(id, {revision:0, committed:0, durable:'', pending:false, failed:false});
+    return saveRecords.get(id);
+  }
+  function renderSaveState() {
+    const state = saveRecord(project.id);
+    const saved = !state.pending && !state.failed && state.durable === JSON.stringify(project);
+    saveStatus(t(saved ? 'saved' : state.failed || !db ? 'saveFailed' : 'saving'));
+    $('saveRecovery').hidden = !state.failed && !!db;
+    $('retrySave').disabled = state.pending;
+  }
   async function save(target = project) {
     target.updatedAt = new Date().toISOString();
-    saveStatus(t('saving'));
-    if (!db) { saveStatus(t('saveFailed')); return false; }
-    const snapshot = structuredClone(target);
+    const snapshot = structuredClone(target), serialized = JSON.stringify(snapshot);
+    const state = saveRecord(target.id), revision = ++state.revision;
+    state.pending = true; renderSaveState();
     try {
+      if (!db) throw new Error('STORAGE_UNAVAILABLE');
       await new Promise((resolve, reject) => { const tx = db.transaction('projects', 'readwrite'); tx.objectStore('projects').put(snapshot); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error); });
-      const i = projects.findIndex(p => p.id === snapshot.id); if (i >= 0) projects[i] = snapshot; else projects.push(snapshot);
-      renderProjects(); saveStatus(t('saved')); return true;
-    } catch (_) { saveStatus(t('saveFailed')); toast(t('saveFailed')); return false; }
+      // Completion callbacks can arrive late. Never replace a newer snapshot or status.
+      if (revision > state.committed) {
+        state.committed = revision; state.durable = serialized;
+        const i = projects.findIndex(p => p.id === snapshot.id); if (i >= 0) projects[i] = snapshot; else projects.push(snapshot);
+      }
+      if (revision === state.revision) { state.pending = false; state.failed = false; }
+      renderProjects(); renderSaveState();
+      return revision === state.revision && serialized === JSON.stringify(target);
+    } catch (_) {
+      if (revision === state.revision) { state.pending = false; state.failed = true; }
+      renderSaveState(); return false;
+    }
+  }
+  async function changeProject(next, nextStep = 0) {
+    if (busy || changingProject) { $('projects').value = project.id; return false; }
+    if (next.id === project.id) return false;
+    changingProject = true;
+    const previous = project;
+    $('projects').value = previous.id;
+    try {
+      if (!await save(previous) || project !== previous) return false;
+      project = next; remember('mfh-active', project.id); step = nextStep;
+      $('reviewPanel').hidden = true;
+      render();
+      await save();
+      return true;
+    } finally { changingProject = false; }
   }
   function translate() {
     document.documentElement.lang = {zh:'zh-CN',en:'en',es:'es'}[lang]; $('language').value = lang;
@@ -34,7 +72,8 @@
   }
   function renderProjects() {
     const selected = project.id;
-    $('projects').replaceChildren(...projects.map(p => { const e = node('option', p.title || t('untitled')); e.value = p.id; return e; }));
+    const choices = projects.some(p => p.id === selected) ? projects : [...projects, project];
+    $('projects').replaceChildren(...choices.map(p => { const e = node('option', p.title || t('untitled')); e.value = p.id; return e; }));
     $('projects').value = selected;
   }
   function renderScenes() {
@@ -132,6 +171,7 @@
   function focusChapter() {
     if (busy || !activeChapter() || $('chapterFocusDialog').open) return;
     chapterEditorHeight = $('chapterText').style.height;
+    $('focusEditorSlot').before($('saveRecovery'));
     $('focusEditorSlot').append($('chapterEditor'));
     document.body.classList.add('chapter-focus-open');
     $('chapterFocusDialog').showModal();
@@ -140,6 +180,7 @@
     $('focusTitle').focus({preventScroll:true});
   }
   $('chapterFocusDialog').addEventListener('close', () => {
+    $('workspacePanel').before($('saveRecovery'));
     $('chapterEditorAnchor').before($('chapterEditor'));
     $('chapterText').style.height = chapterEditorHeight;
     document.body.classList.remove('chapter-focus-open');
@@ -325,7 +366,7 @@
   function render() {
     translate(); renderProjects(); renderScenes(); renderQuestion(); renderAnswers(); renderMaterials(); renderChapters(); renderConnection(); renderHelp(); renderHandoff();
     for (const [id, key] of [['bookTitle','title'],['person','person'],['reader','reader'],['target','target'],['answer','workingAnswer']]) $(id).value = project[key];
-    saveStatus(t(db ? 'saved' : 'saveFailed')); showStep(step, false); showMode(mode);
+    renderSaveState(); showStep(step, false); showMode(mode);
   }
   function download(name, content, type) {
     const url = URL.createObjectURL(new Blob([content], {type})), a = document.createElement('a'); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500);
@@ -376,8 +417,9 @@
     findChapter, chooseChapter,
     workspace: () => showMode('workspace'), help: () => showMode('help'), handoff: () => showMode('handoff'), start: () => { $('welcome').hidden = true; $('bookTitle').focus(); },
     next: () => showStep(step + 1), back: () => showStep(step - 1),
-    new: async () => { if(busy)return; await save(); project=C.newProject(lang); remember('mfh-active',project.id); step=0; await save(); render(); },
-    demo: async () => { if(busy)return; project=C.newProject(lang); project.title=t('demoName'); project.scene='life'; project.materials.push({id:C.uuid(),sourceId:'M'+project.nextMaterial++,name:t('demoNotice'),content:t('demoNotice'),include:true}); project.answers.push({id:C.uuid(),sourceId:'A'+project.nextAnswer++,include:true,question:t('demoQuestion'),answer:t('demoAnswer'),date:new Date().toISOString()}); remember('mfh-active',project.id); await save(); step=1; render(); toast(t('demoNotice')); },
+    new: () => changeProject(C.newProject(lang)),
+    demo: async () => { const next=C.newProject(lang); next.title=t('demoName'); next.scene='life'; next.materials.push({id:C.uuid(),sourceId:'M'+next.nextMaterial++,name:t('demoNotice'),content:t('demoNotice'),include:true}); next.answers.push({id:C.uuid(),sourceId:'A'+next.nextAnswer++,include:true,question:t('demoQuestion'),answer:t('demoAnswer'),date:new Date().toISOString()}); if(await changeProject(next,1))toast(t('demoNotice')); },
+    retrySave: () => save(),
     saveAnswer: () => changeInterview({kind:'save'}),
     skip: () => changeInterview({kind:'skip'}),
     askAI: () => changeInterview({kind:'ai'}),
@@ -417,7 +459,7 @@
     try{await actions[button.dataset.action]?.(button.dataset.id);}catch(err){toast(errorText(err.message));}
   });
   $('language').addEventListener('change',()=>{const value=$('language').value;$('language').value=lang;void changeInterview({kind:'language',value});});
-  $('projects').addEventListener('change',async()=>{const selectedId=$('projects').value;if(busy){$('projects').value=project.id;return;}await save();const selected=projects.find(p=>p.id===selectedId);if(!selected)return;project=structuredClone(selected);remember('mfh-active',project.id);step=0;$('reviewPanel').hidden=true;render();});
+  $('projects').addEventListener('change',async()=>{const selected=projects.find(p=>p.id===$('projects').value);if(selected)await changeProject(structuredClone(selected));});
   $('scenes').addEventListener('change',e=>{const value=e.target.value;renderScenes();$('scenes').querySelector('input:checked')?.focus({preventScroll:true});void changeInterview({kind:'scene',value});});
   for(const [id,key] of [['bookTitle','title'],['person','person'],['reader','reader'],['target','target'],['answer','workingAnswer']]) $(id).addEventListener(id==='target'?'change':'input',()=>{if(id==='answer')interviewEpoch++;project[key]=$(id).value;void save();});
   $('materials').addEventListener('change',async e=>{const m=project.materials.find(m=>m.id===e.target.dataset.material);if(m){m.include=e.target.checked;updateSourceInclusion(e.target);await save();}});
@@ -456,11 +498,12 @@
     for(const file of $('textFile').files){if(!/\.(txt|md|csv|json)$/i.test(file.name)){rejected=true;toast(t('unsupportedFile'));continue;}if(file.size>1024*1024){rejected=true;toast(t('tooLarge'));continue;}const record={id:C.uuid(),sourceId:'M'+project.nextMaterial++,name:file.name,content:await file.text(),include:false};project.materials.push(record);added=true;outsideSearch ||= !matchesSource(record);}
     await save();renderMaterials();$('textFile').value='';if(added&&!rejected)sourceNotice(t(outsideSearch?'sourceOutsideSearch':'sourceUpdated'));
   });
-  $('backupFile').addEventListener('change',async()=>{const file=$('backupFile').files[0];if(!file)return;try{if(file.size>20*1024*1024)throw new Error('TOO_LARGE');const restored=C.validateProject(JSON.parse(await file.text()));project=restored;remember('mfh-active',project.id);await save();step=0;render();toast(t('restoreDone'));}catch(err){toast(errorText(err.message==='TOO_LARGE'?'TOO_LARGE':'INVALID_PROJECT'));}$('backupFile').value='';});
+  $('backupFile').addEventListener('change',async()=>{const file=$('backupFile').files[0];if(!file)return;try{if(file.size>20*1024*1024)throw new Error('TOO_LARGE');const restored=C.validateProject(JSON.parse(await file.text()));if(await changeProject(restored))toast(t('restoreDone'));}catch(err){toast(errorText(err.message==='TOO_LARGE'?'TOO_LARGE':'INVALID_PROJECT'));}$('backupFile').value='';});
   try {
     db=await new Promise((resolve,reject)=>{const r=indexedDB.open('memory-for-human',1);r.onupgradeneeded=()=>r.result.createObjectStore('projects',{keyPath:'id'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
-    projects=(await getAll()).map(p=>C.validateProject(p,true));let id;try{id=localStorage.getItem('mfh-active');}catch(_){}project=projects.find(p=>p.id===id)||projects[0]||C.newProject(lang);project.language=lang;await save();
+    projects=(await getAll()).map(p=>C.validateProject(p,true));for(const p of projects)saveRecord(p.id).durable=JSON.stringify(p);let id;try{id=localStorage.getItem('mfh-active');}catch(_){}project=projects.find(p=>p.id===id)||projects[0]||C.newProject(lang);project.language=lang;await save();
   }catch(_){project=C.newProject(lang);projects=[project];toast(t('storageUnavailable'));}
+  window.addEventListener('beforeunload',e=>{if(saveRecord(project.id).durable!==JSON.stringify(project)){e.preventDefault();e.returnValue='';}});
   $('model').value=C.providers.openai.model;$('baseURL').value=C.providers.openai.baseURL;render();
   if(location.protocol!=='file:'){
     try{const r=await fetch('/api/session');if(r.ok){const session=await r.json();token=session.token;connection=session.connection||null;renderConnection();}}catch(_){}
