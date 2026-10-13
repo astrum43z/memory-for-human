@@ -48,6 +48,9 @@ Object.assign(window.MFH_LOCALES.es, {invalidConfig:'Comprueba el servicio y la 
 Object.assign(window.MFH_LOCALES.zh, {retrySave:'重试保存',saveRecoveryHint:'最新内容还没保存成功，先别关闭页面。可以重试保存，或下载包含当前文字的备份；保存成功后再切换回忆录。'});
 Object.assign(window.MFH_LOCALES.en, {retrySave:'Retry saving',saveRecoveryHint:'Your latest work has not been saved. Keep this page open. Retry saving or download a backup of the current text; save successfully before changing memoirs.'});
 Object.assign(window.MFH_LOCALES.es, {retrySave:'Reintentar guardar',saveRecoveryHint:'Los últimos cambios no se han guardado. Mantén esta página abierta. Reintenta guardar o descarga una copia del texto actual; guarda antes de cambiar de memorias.'});
+Object.assign(window.MFH_LOCALES.zh, {firstChapterReady:'已有文字可以整理了。先把它们汇成一章，不用连接 AI。'});
+Object.assign(window.MFH_LOCALES.en, {firstChapterReady:'Your words are ready. Gather them into your first editable chapter without connecting AI.'});
+Object.assign(window.MFH_LOCALES.es, {firstChapterReady:'Ya tienes textos para reunir en un primer capítulo editable, sin conectar la IA.'});
 window.MFH_QUESTIONS = {
   "zh": {
     "lovers": [

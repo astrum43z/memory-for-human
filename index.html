@@ -79,7 +79,7 @@
         <section class="card" data-panel="2" hidden>
           <div class="section-head"><h2 data-i18n="writingTitle"></h2></div>
           <div class="field"><label for="nextChapterTitle" data-i18n="chapterTitle"></label><input id="nextChapterTitle" maxlength="300" data-placeholder="chapterPlaceholder"></div>
-          <div class="row spaced"><button class="primary" data-action="writeAI" data-ai data-i18n="writeAI"></button><button data-action="collect" data-i18n="collect"></button><button data-action="pasteDraft" data-i18n="pasteDraft"></button></div>
+          <div class="row spaced"><button id="writingAIButton" class="primary" data-action="writeAI" data-ai data-i18n="writeAI"></button><button id="writingLocalButton" data-action="collect" data-i18n="collect"></button><button data-action="pasteDraft" data-i18n="pasteDraft"></button></div>
           <p class="notice" data-i18n="sendNotice"></p>
           <div class="chapter-toolbar"><select id="chapters" aria-label="Chapter"></select><button id="chapterFinderButton" class="small" data-action="findChapter" data-i18n="findChapter" disabled></button><button class="small" id="focusChapterButton" data-action="focusChapter" data-i18n="focusChapter" hidden></button><button class="small" data-action="newChapter" data-i18n="newChapter"></button></div>
           <p id="noChapter" class="empty" data-i18n="noChapters"></p>

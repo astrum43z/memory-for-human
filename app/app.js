@@ -148,7 +148,16 @@
   $('sourceSearch').addEventListener('input', () => { sourceQuery = $('sourceSearch').value; renderAnswers(); renderMaterials(); });
   $('clearSourceSearch').addEventListener('click', () => { sourceQuery = ''; $('sourceSearch').value = ''; $('sourceSearch').focus({preventScroll:true}); renderAnswers(); renderMaterials(); });
   const activeChapter = () => project.chapters.find(c => c.id === project.activeChapter);
+  function renderWritingEntry() {
+    const ready = project.answers.some(a => a.include !== false) || project.materials.some(m => m.include);
+    const localFirst = ready && !connection && !project.chapters.length;
+    $('writingAIButton').classList.toggle('primary', !localFirst);
+    $('writingLocalButton').classList.toggle('primary', localFirst);
+    $('noChapter').dataset.i18n = ready ? 'firstChapterReady' : 'noChapters';
+    $('noChapter').textContent = t($('noChapter').dataset.i18n);
+  }
   function renderChapters() {
+    renderWritingEntry();
     const c = activeChapter(); $('chapters').replaceChildren(...project.chapters.map(c => { const o = node('option', c.title || t('chapter')); o.value = c.id; return o; }));
     $('chapters').value = project.activeChapter; $('chapters').disabled = !project.chapters.length; $('noChapter').hidden = !!c; $('chapterEditor').hidden = !c;
     $('chapterFinderButton').disabled = busy || !project.chapters.length;
@@ -339,6 +348,7 @@
   $('keepInterviewDraft').addEventListener('click', () => { if (!interviewSaving) pendingInterviewChange = null; });
   $('saveInterviewDraft').addEventListener('click', commitInterviewChange);
   function renderConnection() {
+    renderWritingEntry();
     $('connectionStatus').textContent = connection ? `${t('connected')} · ${C.providers[connection.provider]?.name || ''}` : t('offline'); $('connectionDot').classList.toggle('on', !!connection); $('connectionButton').textContent = t('connect');
   }
   function renderHelp() {
@@ -367,6 +377,7 @@
     if (step !== 2) exportReviewProject = '';
     $('returnToExport').hidden = step !== 2 || exportReviewProject !== project.id;
     if (step === 3) renderExportOverview();
+    if (step === 2) renderWritingEntry();
     document.querySelectorAll('[data-panel]').forEach(e => e.hidden = Number(e.dataset.panel) !== step);
     document.querySelectorAll('[data-step]').forEach(e => { e.classList.toggle('active', Number(e.dataset.step) === step); e.setAttribute('aria-current', Number(e.dataset.step) === step ? 'step' : 'false'); });
     $('welcome').hidden = step !== 0 || !!project.title || !!project.answers.length; $('backButton').hidden = step === 0; $('nextButton').hidden = step === 3;
