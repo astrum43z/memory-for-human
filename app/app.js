@@ -16,24 +16,53 @@
   const saveRecords = new Map();
   let changingProject = false;
   function saveRecord(id) {
-    if (!saveRecords.has(id)) saveRecords.set(id, {revision:0, committed:0, durable:'', pending:false, failed:false});
+    if (!saveRecords.has(id)) saveRecords.set(id, {revision:0, committed:0, durable:'', pending:false, failed:false, conflict:false, stored:null, writes:Promise.resolve()});
     return saveRecords.get(id);
   }
   function renderSaveState() {
     const state = saveRecord(project.id);
     const saved = !state.pending && !state.failed && state.durable === JSON.stringify(project);
-    saveStatus(t(saved ? 'saved' : state.failed || !db ? 'saveFailed' : 'saving'));
-    $('saveRecovery').hidden = !state.failed && !!db;
-    $('retrySave').disabled = state.pending;
+    saveStatus(t(state.conflict ? 'saveConflict' : saved ? 'saved' : state.failed || !db ? 'saveFailed' : 'saving'));
+    $('saveRecovery').hidden = !state.failed && !state.conflict && !!db;
+    $('saveRecoveryTitle').dataset.i18n = state.conflict ? 'saveConflictHint' : 'saveRecoveryHint';
+    $('saveRecoveryTitle').textContent = t($('saveRecoveryTitle').dataset.i18n);
+    $('retrySave').disabled = state.pending || state.conflict;
+  }
+  function persistSnapshot(snapshot, state) {
+    // Serialize durable writes, independently of delayed UI completion callbacks.
+    const finished = {};
+    finished.promise = new Promise((resolve, reject) => Object.assign(finished, {resolve, reject}));
+    const write = state.writes.then(() => new Promise((resolve, reject) => {
+      if (state.conflict) { reject(new Error('SAVE_CONFLICT')); return; }
+      const tx = db.transaction('projects', 'readwrite'), store = tx.objectStore('projects');
+      const record = {...snapshot, _mfhRevision:C.uuid()}, serialized = JSON.stringify(record);
+      const request = store.get(snapshot.id);
+      request.onsuccess = () => {
+        // Compare the exact baseline as well as its persisted token. This also
+        // detects writes from older tabs that do not retain revision metadata.
+        const current = request.result === undefined ? null : JSON.stringify(request.result);
+        if (current !== state.stored) { state.conflict = true; tx.abort(); return; }
+        store.put(record);
+      };
+      tx.addEventListener('complete', () => { state.stored = serialized; resolve(); });
+      tx.addEventListener('abort', () => reject(state.conflict ? new Error('SAVE_CONFLICT') : tx.error || new Error('SAVE_ABORTED')));
+      tx.oncomplete = () => finished.resolve();
+      tx.onabort = () => reject(state.conflict ? new Error('SAVE_CONFLICT') : tx.error || new Error('SAVE_ABORTED'));
+      tx.onerror = () => {}; // Abort is the final outcome; never advance the baseline on error.
+    }));
+    state.writes = write.catch(() => {});
+    write.catch(finished.reject);
+    return finished.promise;
   }
   async function save(target = project) {
+    if (saveRecord(target.id).conflict) { renderSaveState(); return false; }
     target.updatedAt = new Date().toISOString();
     const snapshot = structuredClone(target), serialized = JSON.stringify(snapshot);
     const state = saveRecord(target.id), revision = ++state.revision;
     state.pending = true; renderSaveState();
     try {
       if (!db) throw new Error('STORAGE_UNAVAILABLE');
-      await new Promise((resolve, reject) => { const tx = db.transaction('projects', 'readwrite'); tx.objectStore('projects').put(snapshot); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error); });
+      await persistSnapshot(snapshot, state);
       // Completion callbacks can arrive late. Never replace a newer snapshot or status.
       if (revision > state.committed) {
         state.committed = revision; state.durable = serialized;
@@ -96,7 +125,7 @@
   function sourceFeedback(source, message) {
     return matchesSource(source) ? message : t('sourceOutsideSearch');
   }
-  function sourceNotice(message) { if ($('saveStatus').textContent !== t('saveFailed')) toast(message); }
+  function sourceNotice(message) { if (!saveRecord(project.id).failed && !saveRecord(project.id).conflict) toast(message); }
   function sourceSummary(group, id) {
     return Array.from($(group).querySelectorAll('details')).find(e => e.dataset.recordId === id)?.querySelector('summary');
   }
@@ -333,13 +362,13 @@
     }
   }
   async function commitInterviewChange() {
-    if (!pendingInterviewChange || interviewSaving) return;
+    if (!pendingInterviewChange || interviewSaving || saveRecord(project.id).conflict) return;
     const change = pendingInterviewChange, next = changedInterview(change, true);
     interviewSaving = true; $('keepInterviewDraft').disabled = true; $('saveInterviewDraft').disabled = true;
     $('interviewDraftStatus').textContent = t('saving');
     const saved = await save(next);
-    interviewSaving = false; $('keepInterviewDraft').disabled = false; $('saveInterviewDraft').disabled = false;
-    if (!saved) { $('interviewDraftStatus').textContent = t('draftSaveFailed'); $('saveInterviewDraft').focus(); return; }
+    interviewSaving = false; $('keepInterviewDraft').disabled = false; $('saveInterviewDraft').disabled = saveRecord(project.id).conflict;
+    if (!saved) { $('interviewDraftStatus').textContent = t(saveRecord(project.id).conflict ? 'saveConflictHint' : 'draftSaveFailed'); (saveRecord(project.id).conflict ? $('keepInterviewDraft') : $('saveInterviewDraft')).focus(); return; }
     pendingInterviewChange = null; $('interviewDraftDialog').close(); applyInterviewChange(next, change); sourceNotice(sourceFeedback(next.answers.at(-1),t('answerSaved')));
     await continueInterviewChange(change);
   }
@@ -350,7 +379,7 @@
     const hasAnswer = !!$('answer').value.trim();
     if (change.kind === 'save' && !hasAnswer) { toast(t('emptyAnswer')); return; }
     if (hasAnswer) {
-      pendingInterviewChange = change; $('interviewDraftQuestion').textContent = currentQuestion(); $('interviewDraftStatus').textContent = '';
+      pendingInterviewChange = change; $('interviewDraftQuestion').textContent = currentQuestion(); $('interviewDraftStatus').textContent = saveRecord(project.id).conflict ? t('saveConflictHint') : ''; $('saveInterviewDraft').disabled = saveRecord(project.id).conflict;
       $('interviewDraftDialog').showModal(); $('keepInterviewDraft').focus();
       if (change.kind === 'save') await commitInterviewChange();
       return;
@@ -543,9 +572,14 @@
   $('backupFile').addEventListener('change',async()=>{const file=$('backupFile').files[0];if(!file)return;try{if(file.size>20*1024*1024)throw new Error('TOO_LARGE');const restored=C.validateProject(JSON.parse(await file.text()));if(await changeProject(restored))toast(t('restoreDone'));}catch(err){toast(errorText(err.message==='TOO_LARGE'?'TOO_LARGE':'INVALID_PROJECT'));}$('backupFile').value='';});
   try {
     db=await new Promise((resolve,reject)=>{const r=indexedDB.open('memory-for-human',1);r.onupgradeneeded=()=>r.result.createObjectStore('projects',{keyPath:'id'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
-    projects=(await getAll()).map(p=>C.validateProject(p,true));for(const p of projects)saveRecord(p.id).durable=JSON.stringify(p);let id;try{id=localStorage.getItem('mfh-active');}catch(_){}project=projects.find(p=>p.id===id)||projects[0]||C.newProject(lang);project.language=lang;await save();
+    const storedProjects = await getAll();
+    projects=storedProjects.map(p=>C.validateProject(p,true));
+    for (let i=0;i<projects.length;i++) { const state=saveRecord(projects[i].id); state.stored=JSON.stringify(storedProjects[i]); state.durable=JSON.stringify(projects[i]); }
+    let id;try{id=localStorage.getItem('mfh-active');}catch(_){}project=projects.find(p=>p.id===id)||projects[0]||C.newProject(lang);project.language=lang;
+    // Merely opening another tab must not create a new persisted revision.
+    if (saveRecord(project.id).stored !== null) { saveRecord(project.id).durable=JSON.stringify(project);renderSaveState(); } else await save();
   }catch(_){project=C.newProject(lang);projects=[project];toast(t('storageUnavailable'));}
-  window.addEventListener('beforeunload',e=>{if(saveRecord(project.id).durable!==JSON.stringify(project)){e.preventDefault();e.returnValue='';}});
+  window.addEventListener('beforeunload',e=>{if(saveRecord(project.id).conflict||saveRecord(project.id).durable!==JSON.stringify(project)){e.preventDefault();e.returnValue='';}});
   $('model').value=C.providers.openai.model;$('baseURL').value=C.providers.openai.baseURL;render();
   if(location.protocol!=='file:'){
     try{const r=await fetch('/api/session');if(r.ok){const session=await r.json();token=session.token;connection=session.connection||null;renderConnection();}}catch(_){}
