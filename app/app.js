@@ -95,6 +95,7 @@
     document.documentElement.lang = {zh:'zh-CN',en:'en',es:'es'}[lang]; $('language').value = lang;
     document.querySelectorAll('[data-i18n]').forEach(e => e.textContent = t(e.dataset.i18n));
     document.querySelectorAll('[data-placeholder]').forEach(e => e.placeholder = t(e.dataset.placeholder));
+    document.querySelectorAll('[data-i18n-label]').forEach(e=>e.setAttribute('aria-label',t(e.dataset.i18nLabel)));
     $('projects').setAttribute('aria-label', t('books')); $('chapters').setAttribute('aria-label', t('chapters')); $('handoffText').setAttribute('aria-label', t('handoff'));$('language').setAttribute('aria-label',t('language'));document.querySelector('.steps').setAttribute('aria-label',t('myBook'));
     $('checklist').replaceChildren(...t('checklist').map(s => node('li', s)));
     $('readmeLink').href = `preview/README${lang === 'zh' ? '' : '.' + lang}.html`;
@@ -105,6 +106,36 @@
     const choices = projects.some(p => p.id === selected) ? projects : [...projects, project];
     $('projects').replaceChildren(...choices.map(p => { const e = node('option', p.title || t('untitled')); e.value = p.id; return e; }));
     $('projects').value = selected;
+    renderDesk();
+  }
+  function renderDesk() {
+    const hasWords = !!(project.chapters.length || project.answers.length || project.workingAnswer || project.materials.length);
+    $('deskHeading').textContent = t(hasWords ? 'deskReturnTitle' : 'deskTitle');
+    $('deskHint').textContent = t(hasWords ? 'deskReturnHint' : 'deskHint');
+    $('continueBook').textContent = t(project.chapters.length ? 'continueBook' : hasWords ? 'continueStory' : 'beginStory');
+    $('deskCounts').textContent = t('deskCounts').replace('{chapters}', project.chapters.length).replace('{sources}', project.answers.length + project.materials.length);
+    $('coverAuthor').textContent = project.person || t('coverAuthor');
+    $('deskEmpty').hidden = !!project.chapters.length;
+    $('deskChapterList').replaceChildren(...project.chapters.slice(0,5).map((chapter,index) => {
+      const item=node('li'), button=node('button',undefined,'desk-chapter');
+      button.dataset.action='openDeskChapter';button.dataset.id=chapter.id;
+      const text=node('span',undefined,'desk-chapter-copy');
+      text.append(node('strong',chapter.title || t('chapter')),node('small',t(chapter.approved ? 'reviewed' : 'draftStatus')));
+      button.append(node('span',String(index+1).padStart(2,'0'),'desk-chapter-number'),text,node('span','↗','desk-arrow'));item.append(button);return item;
+    }));
+    if (project.chapters.length > 5) { const item=node('li'),button=node('button',t('allChapters'),'quiet');button.dataset.action='openContents';item.append(button);$('deskChapterList').append(item); }
+  }
+  function showStoryView(view) {
+    const archive=view==='archive';
+    if ($('interviewView').hidden !== archive) interviewEpoch++;
+    if (archive) stopInterviewVoice();
+    $('interviewView').hidden=archive;$('archiveView').hidden=!archive;
+    $('interviewTab').setAttribute('aria-pressed',String(!archive));$('archiveTab').setAttribute('aria-pressed',String(archive));
+  }
+  async function openDeskChapter(id) {
+    if(busy || !project.chapters.some(c=>c.id===id))return;
+    project.activeChapter=id;renderChapters();$('reviewPanel').hidden=true;showStep(2);
+    $('editChapterTitle').focus({preventScroll:true});await save();
   }
   function renderScenes() {
     $('scenes').replaceChildren(...C.scenes.map(s => {
@@ -192,6 +223,7 @@
     $('writingChapterPosition').textContent = index < 0 ? '' : `${t('chapter')} ${index + 1} / ${project.chapters.length}`;
     $('writingChapterPosition').hidden = index < 0;
     const composer = $('chapterComposer'), empty = !project.chapters.length;
+    const addButton=document.querySelector('[data-action="newChapter"]');addButton.dataset.i18n=empty?'firstChapter':'newChapter';addButton.textContent=t(addButton.dataset.i18n);
     if (composer.dataset.empty !== String(empty)) { composer.open = empty; composer.dataset.empty = String(empty); }
     for (const action of ['writeAI','collect','pasteDraft']) {
       const button = document.querySelector(`[data-action="${action}"]`);
@@ -421,6 +453,8 @@
     step = Math.max(0, Math.min(3, value)); showMode('workspace');
     if (step !== 2) exportReviewProject = '';
     $('returnToExport').hidden = step !== 2 || exportReviewProject !== project.id;
+    if (step === 0) renderDesk();
+    $('stageLabel').textContent = t(['navBook','navStories','navWriting','navEdition'][step]);
     if (step === 3) renderExportOverview();
     if (step === 2) { renderWritingEntry(); renderComposer(); }
     document.querySelectorAll('[data-panel]').forEach(e => e.hidden = Number(e.dataset.panel) !== step);
@@ -478,10 +512,13 @@
   }
   const actions = {
     focusChapter,
+    desk:()=>showStep(0), continueBook:()=>{showStoryView('interview');showStep(project.chapters.length?2:1);},
+    openArchive:()=>{showStep(1);showStoryView('archive');},showArchive:()=>showStoryView('archive'),showInterview:()=>showStoryView('interview'),
+    goWriting:()=>showStep(2),openDeskChapter,openContents:()=>{showStep(2);findChapter();},
     inspectExportChapter,
     returnToExport: () => { showStep(3); $('exportOverview').focus({preventScroll:true}); $('exportOverview').scrollIntoView({behavior:'auto',block:'start'}); },
     findChapter, chooseChapter,
-    workspace: () => showMode('workspace'), help: () => showMode('help'), handoff: () => showMode('handoff'), start: () => { $('welcome').hidden = true; $('bookTitle').focus(); },
+    workspace: () => showMode('workspace'), help: () => showMode('help'), handoff: () => showMode('handoff'), start: () => { $('welcome').hidden = true; showStep(0); $('bookTitle').focus(); },
     next: () => showStep(step + 1), back: () => showStep(step - 1),
     new: () => changeProject(C.newProject(lang)),
     demo: async () => { const next=C.newProject(lang); next.title=t('demoName'); next.scene='life'; next.materials.push({id:C.uuid(),sourceId:'M'+next.nextMaterial++,name:t('demoNotice'),content:t('demoNotice'),include:true}); next.answers.push({id:C.uuid(),sourceId:'A'+next.nextAnswer++,include:true,question:t('demoQuestion'),answer:t('demoAnswer'),date:new Date().toISOString()}); if(await changeProject(next,1))toast(t('demoNotice')); },
@@ -522,8 +559,10 @@
     const nextStep=e.target.closest('[data-step]');if(nextStep){showStep(Number(nextStep.dataset.step));return;}
     const faqButton=e.target.closest('[data-faq]');if(faqButton){faq=Number(faqButton.dataset.faq);renderHelp();return;}
     const button=e.target.closest('[data-action]');if(!button||!project)return;
+    $('workspaceTools').open=false;
     try{await actions[button.dataset.action]?.(button.dataset.id);}catch(err){toast(errorText(err.message));}
   });
+  $('workspaceTools').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();$('workspaceTools').open=false;$('workspaceTools').querySelector('summary').focus();}});
   $('language').addEventListener('change',()=>{const value=$('language').value;$('language').value=lang;void changeInterview({kind:'language',value});});
   $('projects').addEventListener('change',async()=>{const selected=projects.find(p=>p.id===$('projects').value);if(selected)await changeProject(structuredClone(selected));});
   $('scenes').addEventListener('change',e=>{const value=e.target.value;renderScenes();$('scenes').querySelector('input:checked')?.focus({preventScroll:true});void changeInterview({kind:'scene',value});});
