@@ -282,6 +282,7 @@
     } else if (change.kind === 'skip') { next.questionIndex++; next.aiQuestion = ''; }
     if (change.kind === 'scene') { next.scene = change.value; next.questionIndex = 0; next.aiQuestion = ''; }
     if (change.kind === 'language') next.language = change.value;
+    if (change.kind === 'import') next.aiQuestion = change.question;
     return next;
   }
   async function askInterviewQuestion() {
@@ -299,6 +300,13 @@
     else if (change.kind === 'scene') $('scenes').querySelector('input:checked')?.focus({preventScroll:true});
     else if (change.kind === 'language') $('language').focus({preventScroll:true});
   }
+  async function continueInterviewChange(change) {
+    if (change.kind === 'ai') await askInterviewQuestion();
+    if (change.kind === 'import') {
+      await addChapter(change.content, 'manual', change.title);
+      $('returnedAI').value = ''; renderQuestion();
+    }
+  }
   async function commitInterviewChange() {
     if (!pendingInterviewChange || interviewSaving) return;
     const change = pendingInterviewChange, next = changedInterview(change, true);
@@ -308,7 +316,7 @@
     interviewSaving = false; $('keepInterviewDraft').disabled = false; $('saveInterviewDraft').disabled = false;
     if (!saved) { $('interviewDraftStatus').textContent = t('draftSaveFailed'); $('saveInterviewDraft').focus(); return; }
     pendingInterviewChange = null; $('interviewDraftDialog').close(); applyInterviewChange(next, change); sourceNotice(sourceFeedback(next.answers.at(-1),t('answerSaved')));
-    if (change.kind === 'ai') await askInterviewQuestion();
+    await continueInterviewChange(change);
   }
   async function changeInterview(change) {
     if (interviewSaving || $('interviewDraftDialog').open) return;
@@ -323,7 +331,7 @@
       return;
     }
     applyInterviewChange(changedInterview(change, false), change); void save();
-    if (change.kind === 'ai') await askInterviewQuestion();
+    await continueInterviewChange(change);
   }
   $('interviewDraftDialog').addEventListener('cancel', e => { if (interviewSaving) e.preventDefault(); else pendingInterviewChange = null; });
   // Clear cancellation synchronously: a queued close event may arrive after reopening.
@@ -392,7 +400,7 @@
     project.chapters.push(c); project.activeChapter = c.id; $('nextChapterTitle').value = ''; $('reviewPanel').hidden = true; await save(); renderChapters(); showStep(2); toast(t('chapterAdded'));
   }
   async function importAIResult() {
-    let content = $('returnedAI').value.trim(), title = '';
+    let content = $('returnedAI').value.trim(), title = '', question = '';
     if (!content) { toast(t('invalidResult')); return; }
     const candidate = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
     if (candidate.startsWith('{')) {
@@ -400,8 +408,9 @@
       if (typeof obj.content !== 'string' || obj.content.length > 200000) { toast(t('invalidResult')); return; }
       content = obj.content; title = typeof obj.chapterTitle === 'string' ? obj.chapterTitle.slice(0,300) : '';
       if (Array.isArray(obj.uncertainties) && obj.uncertainties.length) content += '\n\n' + t('reviewResult') + '\n' + obj.uncertainties.filter(s => typeof s === 'string').map(s => '- ' + s).join('\n');
-      if (Array.isArray(obj.questions) && typeof obj.questions[0] === 'string') project.aiQuestion = obj.questions[0].slice(0,2000);
+      if (Array.isArray(obj.questions) && typeof obj.questions[0] === 'string') question = obj.questions[0].slice(0,2000);
     }
+    if (question) { await changeInterview({kind:'import',question,content:content.slice(0,200000),title}); return; }
     await addChapter(content.slice(0,200000), 'manual', title); $('returnedAI').value = ''; renderQuestion();
   }
   function printMemoir() {
