@@ -1,51 +1,51 @@
 /* The ordinary writing workspace. Focus-mode dialogs keep their own design. */
 @media screen {
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) {
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) {
     background:#f3f1eb;
   }
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .header {
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .header {
     background:#faf8f2;border-color:#d7d3c7;
   }
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .brand {
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .brand {
     font-family:Georgia,"Noto Serif CJK SC","Songti SC",SimSun,serif;
     font-size:21px;font-weight:600;letter-spacing:-.03em;
   }
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .brand small {
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .brand small {
     font-family:"Segoe UI","Microsoft YaHei",Arial,sans-serif;letter-spacing:.04em;
   }
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .layout {
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .layout {
     max-width:1320px;grid-template-columns:224px minmax(0,1fr);gap:52px;margin-top:36px;
   }
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .sidebar {
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .sidebar {
     padding-right:24px;border-right:1px solid #d7d3c7;
   }
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .sidebar button,
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .header button {
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .sidebar button,
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .header button {
     font-size:14px;font-weight:500;border-radius:4px;min-height:44px;
   }
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .sidebar select {
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .sidebar select {
     background:transparent;border:0;border-bottom:1px solid #b8b9ae;border-radius:0;padding-left:0;
   }
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .steps {gap:8px;margin:32px 0}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .step {border-radius:0;padding-left:0}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .step b {
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .steps {gap:8px;margin:32px 0}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .step {border-radius:0;padding-left:0}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .step b {
     font-family:Georgia,serif;border:0;border-radius:0;font-size:17px;color:#616658;background:transparent;
   }
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .step.active {
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .step.active {
     background:transparent;color:#223d31;box-shadow:inset -2px 0 #375342;font-weight:650;
   }
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .step.active b {color:#223d31}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .save-state {color:#435448;font-size:13px}
-  .editorial-writing {
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .step.active b {color:#223d31}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .save-state {color:#435448;font-size:13px}
+  .editorial-writing, .editorial-sources {
     --ink:#262b25;--muted:#62695f;--green:#2e5846;--soft:#eceee6;--line:#d9d9cc;
     background:transparent;border:0;border-radius:0;padding:0;color:var(--ink);
   }
-  .editorial-writing .section-head {margin:0 0 28px}
-  .editorial-writing .section-head h2 {
+  :is(.editorial-writing,.editorial-sources) .section-head {margin:0 0 28px}
+  :is(.editorial-writing,.editorial-sources) .section-head h2 {
     font-family:Georgia,"Noto Serif CJK SC","Songti SC",SimSun,serif;
     font-size:clamp(28px,2.5vw,36px);font-weight:500;line-height:1.5;letter-spacing:.01em;
   }
-  .editorial-writing button {min-height:44px;border-radius:4px;font-size:14px;font-weight:500}
+  :is(.editorial-writing,.editorial-sources) button {min-height:44px;border-radius:4px;font-size:14px;font-weight:500}
   .editorial-writing .chapter-toolbar {
     justify-content:flex-start;gap:8px;margin:0 0 24px;padding:12px 0;
     border-block:1px solid #c7ccbd;position:sticky;top:0;z-index:2;background:#f3f1eb;
@@ -92,27 +92,27 @@
   .composer-content input {background:#fffefa;border-radius:4px}
   .composer-content .notice {background:transparent;padding:0;font-size:13px;max-width:65ch;line-height:1.8}
   .editorial-writing .empty {font-family:Georgia,"Noto Serif CJK SC","Songti SC",SimSun,serif;font-size:19px;line-height:1.9;padding:24px 0;max-width:40ch}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .bottom-nav {padding-top:4px}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .bottom-nav button {font-size:14px;border-radius:4px;min-height:44px}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .bottom-nav {padding-top:4px}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .bottom-nav button {font-size:14px;border-radius:4px;min-height:44px}
 }
 @media screen and (max-width:1000px) and (min-width:901px) {
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .layout {grid-template-columns:180px minmax(0,1fr);gap:26px}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .sidebar {padding-right:16px}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .layout {grid-template-columns:180px minmax(0,1fr);gap:26px}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .sidebar {padding-right:16px}
   .editorial-writing #chapterEditor {padding-inline:28px}
 }
 @media screen and (max-width:900px) {
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .header-inner {padding:16px 20px}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .brand {font-size:17px}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .layout {display:block;padding:0 20px;margin-top:20px}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .sidebar {border:0;padding:0}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .steps {gap:0;margin:18px 0;border-bottom:1px solid #c7ccbd}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .step {font-size:11px;padding:8px 2px 12px;gap:2px}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .step.active {box-shadow:inset 0 -2px #375342}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .sidebar-footer {gap:4px;margin-bottom:28px}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .sidebar-footer>button {font-size:12px;padding-inline:6px}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .save-state {font-size:12px;padding-top:4px}
-  .editorial-writing .section-head {margin-bottom:20px}
-  .editorial-writing .section-head h2 {font-size:28px;line-height:1.4}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .header-inner {padding:16px 20px}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .brand {font-size:17px}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .layout {display:block;padding:0 20px;margin-top:20px}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .sidebar {border:0;padding:0}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .steps {gap:0;margin:18px 0;border-bottom:1px solid #c7ccbd}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .step {font-size:11px;padding:8px 2px 12px;gap:2px}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .step.active {box-shadow:inset 0 -2px #375342}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .sidebar-footer {gap:4px;margin-bottom:28px}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .sidebar-footer>button {font-size:12px;padding-inline:6px}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .save-state {font-size:12px;padding-top:4px}
+  :is(.editorial-writing,.editorial-sources) .section-head {margin-bottom:20px}
+  :is(.editorial-writing,.editorial-sources) .section-head h2 {font-size:28px;line-height:1.4}
   .editorial-writing .chapter-toolbar {gap:0 4px;margin-bottom:20px;padding:6px 0}
   .editorial-writing .chapter-toolbar select {flex-basis:100%;font-size:15px}
   .editorial-writing .chapter-toolbar button {font-size:12px;padding-inline:8px;flex:0 1 auto}
@@ -130,7 +130,7 @@
 
 @media screen {
   .editorial-writing .writing-save-state {flex-basis:100%;font-size:12px;line-height:1.6;color:#435448;padding:2px 0 0}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .header select {min-height:44px}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .header select {min-height:44px}
 }
 
 @media screen {
@@ -140,27 +140,27 @@
   .editorial-writing .other-methods .row {margin-top:6px}
   .editorial-writing:has(#noChapter:not([hidden])) .chapter-toolbar select,
   .editorial-writing:has(#noChapter:not([hidden])) #chapterFinderButton {display:none}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .bottom-nav .primary {background:transparent;border-color:transparent;color:#2e5846}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .bottom-nav .primary {background:transparent;border-color:transparent;color:#2e5846}
   html:lang(en) .editorial-writing #chapterText,html:lang(es) .editorial-writing #chapterText {line-height:1.7}
   .editorial-writing .other-methods>summary:focus-visible {outline:3px solid #486745;outline-offset:3px}
 }
 @media screen and (max-width:900px) {
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .sidebar {position:static}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .header-nav {display:none}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .project-row {display:flex;gap:12px;align-items:center}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .project-row select {flex:1;width:0}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .sidebar label {display:none}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .steps {grid-template-columns:repeat(4,minmax(0,1fr))}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .step {flex-direction:column;text-align:center;font-size:13px}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .sidebar-footer {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;border:0;padding:0}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .sidebar-footer .connection {margin:0}
-  body:has(#workspacePanel:not([hidden]) > .editorial-writing:not([hidden])) .save-state {flex-basis:100%}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .sidebar {position:static}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .header-nav {display:none}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .project-row {display:flex;gap:12px;align-items:center}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .project-row select {flex:1;width:0}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .sidebar label {display:none}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .steps {grid-template-columns:repeat(4,minmax(0,1fr))}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .step {flex-direction:column;text-align:center;font-size:13px}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .sidebar-footer {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;border:0;padding:0}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .sidebar-footer .connection {margin:0}
+  body:has(#workspacePanel:not([hidden]) > :is(.editorial-writing,.editorial-sources):not([hidden])) .save-state {flex-basis:100%}
   .editorial-writing #chapterEditor {padding:20px 4px;margin:0;background:transparent;box-shadow:none}
   .editorial-writing .chapter-toolbar button {font-size:14px}
 }
 
 @media screen {
-  .editorial-writing .section-head h2 {overflow-wrap:anywhere}
+  :is(.editorial-writing,.editorial-sources) .section-head h2 {overflow-wrap:anywhere}
   .editorial-writing .section-head .eyebrow {margin:0 0 10px;font-size:12px;letter-spacing:.08em;color:#62695f}
 }
 
@@ -176,4 +176,60 @@
 
 @media screen {
   .editorial-writing .review-send-notice {flex-basis:100%;margin:0 0 8px;font-size:14px;line-height:1.75;color:var(--muted)}
+}
+
+/* Source-page typography shares the manuscript shell; selection stays explicit. */
+@media screen {
+  .editorial-sources > * {max-width:760px;margin-inline:auto}
+  .editorial-sources .section-head .hint {max-width:62ch;line-height:1.8;margin-top:14px}
+  .editorial-sources .question-box {background:#fffefa;border-radius:0;border-left:2px solid #5c6854;padding:24px 28px;margin-block:28px}
+  .editorial-sources .question-box p {font-family:Georgia,"Noto Serif CJK SC","Songti SC",SimSun,serif;font-size:23px;line-height:1.75}
+  .editorial-sources .field label {font-size:14px;font-weight:500}
+  .editorial-sources #answer {font-family:Georgia,"Noto Serif CJK SC","Songti SC",SimSun,serif;font-size:18px;line-height:1.85;background:#fffefa;border:1px solid #8b9685;border-radius:4px;min-height:200px}
+  .editorial-sources .row {gap:8px}
+  .editorial-sources button {background:#fffefa}
+  .editorial-sources button.primary {background:var(--green);color:white;border-color:var(--green)}
+  .editorial-sources button.primary:hover {background:#234333}
+  .editorial-sources button.quiet {background:transparent}
+  .editorial-sources button:hover {border-color:#7b8972}
+  .editorial-sources .subsection {margin-top:40px;padding-top:28px;border-color:#c7ccbd}
+  .editorial-sources .source-search-label {font-family:Georgia,"Noto Serif CJK SC","Songti SC",SimSun,serif;font-size:27px;font-weight:500;line-height:1.5;margin-bottom:20px}
+  .editorial-sources .source-search-row input {background:#fffefa;border-color:#8b9685;border-radius:4px;font-size:16px;min-height:46px}
+  .editorial-sources .source-search-status {font-size:13px;line-height:1.7;letter-spacing:.02em;margin-bottom:28px}
+  .editorial-sources .source-group-title {font-size:14px;font-weight:600;letter-spacing:.04em;color:#515d50}
+  .editorial-sources .subsection>h3:not(.source-group-title) {font-family:Georgia,"Noto Serif CJK SC","Songti SC",SimSun,serif;font-size:25px;font-weight:500;line-height:1.5}
+  .editorial-sources .subsection>.hint {max-width:65ch;line-height:1.8}
+  .editorial-sources .source-record {border-color:#c7ccbd}
+  .editorial-sources .source-record>summary {padding-block:24px}
+  .editorial-sources .source-meta {gap:8px 12px;align-items:center;margin-bottom:12px}
+  .editorial-sources .source-id {font-size:13px;font-weight:600;letter-spacing:.04em;color:#2e5846}
+  .editorial-sources .source-inclusion {font-size:13px;line-height:1.6;border:1px solid #8b9685;border-radius:3px;padding:3px 8px;color:#455240;background:#fffefa}
+  .editorial-sources .source-record:has(input:checked) .source-inclusion {background:#e5eadf;border-color:#718468;color:#2c4934}
+  .editorial-sources .source-title {font-family:Georgia,"Noto Serif CJK SC","Songti SC",SimSun,serif;font-size:21px;font-weight:500;line-height:1.6}
+  .editorial-sources .source-excerpt {font-size:16px;line-height:1.8;margin-top:10px;max-width:65ch}
+  .editorial-sources .source-arrow {top:29px}
+  .editorial-sources .source-content,.editorial-sources .record p {max-width:660px;font-family:Georgia,"Noto Serif CJK SC","Songti SC",SimSun,serif;font-size:18px;line-height:1.85;overflow-wrap:anywhere}
+  .editorial-sources .source-body {padding:0 0 24px}
+  .editorial-sources .material-choice {padding:10px 12px;min-height:48px;border:1px solid #8b9685;background:#fffefa;border-radius:4px;font-size:14px;line-height:1.65;color:#35442f;gap:10px}
+  .editorial-sources .material-choice input {width:20px;height:20px;flex-shrink:0;margin:0;accent-color:#2e5846}
+  .editorial-sources .source-body .tools {margin-top:12px;gap:8px}
+  .editorial-sources .source-body .tools button {padding:8px 14px;border:1px solid #b8c0ae}
+  .editorial-sources .record {border:0;border-bottom:1px solid #c7ccbd;border-radius:0;padding:24px 0;margin:0}
+  .editorial-sources .record h3 {font-family:Georgia,"Noto Serif CJK SC","Songti SC",SimSun,serif;font-size:21px;font-weight:500}
+  .editorial-sources .notice {background:transparent;padding:20px 0 0;border-top:1px solid #c7ccbd;border-radius:0;font-size:14px;line-height:1.8;margin-top:28px}
+  .editorial-sources :is(input,textarea):focus,.editorial-sources :is(button,summary):focus-visible {outline:3px solid #486745;outline-offset:3px}
+  .editorial-sources :is(input,textarea,button,summary) {scroll-margin-block:24px}
+  html:lang(en) .editorial-sources .source-content,html:lang(es) .editorial-sources .source-content {line-height:1.7}
+}
+@media screen and (max-width:900px) {
+  .editorial-sources .question-box {padding:20px;margin-block:24px}
+  .editorial-sources .question-box p {font-size:21px}
+  .editorial-sources .source-search-label {font-size:25px}
+  .editorial-sources .source-title {font-size:20px}
+  .editorial-sources .subsection {margin-top:32px;padding-top:24px}
+  .editorial-sources .source-record>summary {padding-block:22px}
+  .editorial-sources .row button {flex:1 1 auto;white-space:normal}
+  .editorial-sources .source-search-row {align-items:stretch;flex-wrap:wrap}
+  .editorial-sources .source-search-row input {flex-basis:100%}
+  .editorial-sources .source-search-row button {margin-left:auto}
 }
