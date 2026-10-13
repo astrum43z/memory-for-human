@@ -170,6 +170,7 @@
   }
   function focusChapter() {
     if (busy || !activeChapter() || $('chapterFocusDialog').open) return;
+    $('focusHelp').open = false;
     chapterEditorHeight = $('chapterText').style.height;
     $('focusEditorSlot').before($('saveRecovery'));
     $('focusEditorSlot').append($('chapterEditor'));
