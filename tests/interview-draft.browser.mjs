@@ -11,7 +11,7 @@ const app=createApp({initialConfig:{provider:'custom',baseURL:'http://127.0.0.1:
 const browser=await chromium.launch({headless:true,executablePath:process.env.MFH_CHROMIUM_PATH||(existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined)}),base=`http://127.0.0.1:${app.address().port}`,errors=[],output=process.env.MFH_SCREENSHOT_DIR;
 if(output)await mkdir(output,{recursive:true});const words='虚构回答：那天我们在河边第一次见面，手里拿着一本旧书。';
 async function page(lang='zh',width=1440,reduced=false){const context=await browser.newContext({locale:lang==='zh'?'zh-CN':lang,viewport:{width,height:width>700?1000:844},reducedMotion:reduced?'reduce':'no-preference'}),p=await context.newPage();p.on('pageerror',e=>errors.push(e.message));await p.goto(base);await p.waitForFunction(()=>document.querySelector('#connectionDot').classList.contains('on'));await p.click('[data-step="1"]');return {context,p};}
-async function backup(p){await p.click('[data-step="3"]');const d=p.waitForEvent('download');await p.click('[data-action="backup"]');return JSON.parse(await readFile(await(await d).path(),'utf8'));}
+async function backup(p){await p.click('[data-step="3"]');const d=p.waitForEvent('download');await p.locator('[data-action="backup"]:visible').click();return JSON.parse(await readFile(await(await d).path(),'utf8'));}
 async function confirm(p){await p.locator('#interviewDraftDialog').waitFor();await p.click('#saveInterviewDraft');await p.waitForFunction(()=>!document.querySelector('#interviewDraftDialog').open);}
 try{
  for(const lang of ['zh','en','es'])for(const width of [1440,390,320])for(const reduced of [false,true]){
