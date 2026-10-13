@@ -3,7 +3,7 @@
 
 /* Offscreen collapsed sources need no layout until scrolled or focused into view. */
 @media screen {
-  .source-record:not([open]) {content-visibility:auto;contain-intrinsic-size:auto 180px}
+  .source-record:not([open]):not(:focus-within) {content-visibility:auto;contain-intrinsic-size:auto 180px}
 }
 
 /* The same chapter editor becomes a quiet, single-column writing surface. */
