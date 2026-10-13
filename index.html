@@ -86,7 +86,7 @@
             <div class="row"><span class="badge" id="chapterStatus"></span><span class="hint" id="chapterOrigin"></span></div>
             <div class="field"><label for="editChapterTitle" data-i18n="chapterTitle"></label><input id="editChapterTitle" maxlength="300"></div>
             <div class="field"><label for="chapterText" data-i18n="draftLabel"></label><textarea id="chapterText" class="chapter-text"></textarea></div>
-            <div class="row spaced"><button data-action="reviewAI" data-ai data-i18n="reviewAI"></button><button class="primary" id="approvalButton" data-action="approve"></button><button class="quiet danger small" data-action="deleteChapter" data-i18n="remove"></button></div>
+            <div class="row spaced"><p id="reviewSendNotice" class="review-send-notice" data-i18n="sendNotice"></p><button data-action="reviewAI" data-ai data-i18n="reviewAI" aria-describedby="reviewSendNotice"></button><button class="primary" id="approvalButton" data-action="approve"></button><button class="quiet danger small" data-action="deleteChapter" data-i18n="remove"></button></div>
             <section id="reviewPanel" class="subsection" hidden><h3 data-i18n="reviewResult"></h3><div id="reviewOutput" class="review-output"></div></section>
           </div>
           <div id="chapterEditorAnchor" hidden></div>

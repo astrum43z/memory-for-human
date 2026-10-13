@@ -173,3 +173,7 @@
   .editorial-writing #editChapterTitle:not(:focus) {text-overflow:ellipsis}
   .editorial-writing #editChapterTitle:focus {text-overflow:clip}
 }
+
+@media screen {
+  .editorial-writing .review-send-notice {flex-basis:100%;margin:0 0 8px;font-size:14px;line-height:1.75;color:var(--muted)}
+}

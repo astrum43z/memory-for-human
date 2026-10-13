@@ -476,7 +476,7 @@
     writeAI: async () => { if(!project.answers.some(a=>a.include!==false)&&!project.materials.some(m=>m.include)){toast(t('needSources'));return;}const result=await requestAI('draft',$('nextChapterTitle').value);if(result)await addChapter(result,'ai'); },
     collect: async () => { if(!project.answers.some(a=>a.include!==false)&&!project.materials.some(m=>m.include)){toast(t('needSources'));return;}await addChapter(C.sourceDraft(project,locales[lang]),'source'); },
     pasteDraft: () => { showMode('handoff');$('returnedAI').focus(); },
-    newChapter: () => { $('nextChapterTitle').value='';$('nextChapterTitle').focus(); },
+    newChapter: () => { $('chapterComposer').open=true;$('nextChapterTitle').value='';$('nextChapterTitle').scrollIntoView({block:'center',behavior:'auto'});$('nextChapterTitle').focus({preventScroll:true}); },
     reviewAI: async () => { if(!activeChapter()?.content.trim()){toast(t('needChapter'));return;} const result=await requestAI('review');if(result){$('reviewOutput').textContent=result;$('reviewPanel').hidden=false;} },
     approve: async () => { const c=activeChapter();if(!c)return;c.approved=!c.approved;await save();updateChapterBadge(); },
     deleteChapter: async () => { if(!activeChapter()||!confirm(t('deleteConfirm')))return;project.chapters=project.chapters.filter(c=>c.id!==project.activeChapter);project.activeChapter=project.chapters[0]?.id||'';$('reviewPanel').hidden=true;renderChapters();await save(); },
