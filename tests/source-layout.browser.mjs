@@ -1,0 +1,15 @@
+// Large collapsed lists must still reveal complete sources when keyboard-focused.
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {readFile} from 'node:fs/promises';
+import {createApp} from '../server.mjs';
+const {chromium}=createRequire(import.meta.url)('playwright'),C=globalThis.MFHCore;
+const app=createApp({fetchImpl:async()=>{throw Error('No providers')}});await new Promise(r=>app.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true,executablePath:'/usr/bin/chromium'});
+try{for(const lang of ['zh','en','es'])for(const width of [390,1440]){
+ const c=await browser.newContext({locale:lang==='zh'?'zh-CN':lang,viewport:{width,height:900}}),p=await c.newPage(),x=C.newProject(lang);x.title='Fictional long source list';x.materials=Array.from({length:200},(_,i)=>({id:C.uuid(),sourceId:'M'+(i*2+1),name:'Fictional material '+i,content:('A fictional walk beside the river. 虚构故事。 Un paseo ficticio. ').repeat(30)+' END-'+i,include:false}));
+ await p.goto(`http://127.0.0.1:${app.address().port}`);await p.locator('#backupFile').setInputFiles({name:'fictional.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(x))});await p.waitForFunction(()=>document.querySelector('#bookTitle').value==='Fictional long source list');await p.click('[data-step="1"]');
+ const last=p.locator('#materials details').last();await last.locator('summary').focus();await p.keyboard.press('Enter');await p.waitForFunction(()=>document.querySelector('#materials details:last-child[open] .source-content')?.textContent.endsWith('END-199'));assert.equal(await last.locator('.source-content').innerText(),x.materials[199].content);await p.keyboard.press('Tab');assert(await last.locator('input').evaluate(e=>document.activeElement===e));await p.keyboard.press('Space');assert(await last.locator('input').isChecked());
+ await p.fill('#sourceSearch','END-199');assert.equal(await p.locator('.source-record').count(),1);assert(await p.locator('.source-record').evaluate(e=>e.open));await p.click('#clearSourceSearch');assert.equal(await p.locator('.source-record').count(),200);assert(await last.locator('input').isChecked());
+ await last.locator('summary').focus();await p.keyboard.press('Enter');await p.waitForFunction(()=>!document.querySelector('#materials details:last-child').open);await p.keyboard.press('Tab');assert(await p.evaluate(()=>!document.activeElement.closest('#materials details:last-child .source-body')));
+ await p.click('[data-step="3"]');const d=p.waitForEvent('download');await p.locator('[data-panel="3"] [data-action="backup"]').click();const data=JSON.parse(await readFile(await(await d).path(),'utf8'));assert.deepEqual(data.materials.map(m=>[m.sourceId,m.content,m.include]),x.materials.map((m,i)=>[m.sourceId,m.content,i===199]));await c.close();console.log('PASS offscreen keyboard reveal, full content, selection, search/clear, closed-body tab order and backup',lang,width);
+}}finally{await browser.close();app.closeAllConnections();await new Promise(r=>app.close(r));}
