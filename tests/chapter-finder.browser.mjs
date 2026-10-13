@@ -32,7 +32,7 @@ try{
   const after=await backup(p);assert.deepEqual(after.chapters,original.chapters);assert.equal(after.activeChapter,original.chapters[11].id);assert(!Object.hasOwn(after,'chapterQuery'));
   await open(p);await p.fill('#chapterQuery','长标题');assert.equal(await p.locator('.finder-chapter').count(),1);assert(await p.locator('#chapterFinder').evaluate(e=>e.scrollWidth<=e.clientWidth+1));assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await p.locator('#chapterFinder [data-close]').click();
   // Choosing a chapter and then focused writing must still use the same editor.
-  if(await p.locator('#focusChapterButton').count()){await p.click('#focusChapterButton');await p.fill('#chapterText','A new fictional paragraph.');await p.keyboard.press('Escape');assert.equal(await p.locator('#chapterText').inputValue(),'A new fictional paragraph.');await open(p);await p.keyboard.press('Escape');}
+  if(await p.locator('#focusChapterButton').count()){await p.click('#focusChapterButton');await p.fill('#chapterText','A new fictional paragraph.');await p.keyboard.press('Escape');await p.waitForFunction(()=>document.activeElement===document.querySelector('#focusChapterButton'));assert.equal(await p.locator('#chapterText').inputValue(),'A new fictional paragraph.');await open(p);await p.keyboard.press('Escape');}
   await p.reload();await p.click('[data-step="2"]');assert.equal(await p.locator('#chapters').inputValue(),original.chapters[11].id);
   await context.close();console.log(`PASS ${lang} ${width}px reduced=${reduced}: 300 chapters, title/full-text/accent search, duplicate/long/empty titles, safe text, keyboard/focus, unchanged approval/order, save/reload`);
  }
