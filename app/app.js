@@ -190,7 +190,7 @@
       button.dataset.action = 'chooseChapter'; button.dataset.id = chapter.id;
       const current = chapter.id === project.activeChapter;
       if (current) button.setAttribute('aria-current', 'true');
-      const number = node('span', String(index + 1).padStart(2, '0'), 'finder-number'); number.setAttribute('aria-hidden', 'true');
+      const number = node('span', String(index + 1).padStart(2, '0'), 'finder-number');
       const text = node('span', undefined, 'finder-text');
       text.append(node('span', chapter.title || t('chapter'), 'finder-title'));
       const content = chapter.content.replace(/\s+/g, ' ').trim();
